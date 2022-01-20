@@ -1,8 +1,8 @@
-from asyncio import exceptions
 from django.shortcuts import render,redirect
 from django.views.generic import View
 from django.contrib.auth.models import User
-from .forms import RegisterForm
+from django.contrib.auth import authenticate,login,logout
+from .forms import RegisterForm,LoginForm
 
 # Create your views here.
 
@@ -28,9 +28,21 @@ class RegisterView(View):
 #login
 class LoginView(View):
     def get(self,request,*args,**kwargs):
-        pass
+        form=LoginForm()
+        return render(request,"Login.html",context={'form':form})
     def post(self,request,*args,**kwargs):
-        pass
+        form=LoginForm(request.POST)
+        if form.is_valid():
+            try:
+                user=authenticate(username=form.cleaned_data['Username'],password=form.cleaned_data['Password'])
+                if user:
+                    login(request,user)
+                    return redirect(to="login")
+                else:
+                    return render(request,"Login.html",context={'form':form,'error':f'Invalid username and password'})
+            except Exception as error:
+                return render(request,"Login.html",context={'form':form,'error':f'Unable to login in account : {error}'})
+        return render(request,"Login.html",context={'form':form})
 #logout
 class LogoutView(View):
     def get(self,request,*args,**kwargs):
